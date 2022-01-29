@@ -1,0 +1,91 @@
+---
+###############################################################################
+# Unison User Job Configuration
+###############################################################################
+# Set initial unison sync job per user.
+#
+# Args:
+#   user: string user to setup.
+#   config: dict user section of unison_config.
+#
+#       home: '/home/user'
+#       group: 'user' (optional, default: user)
+#       sync: false (optional, default: false; run sync immediately after setup)
+#       config:
+#         my_config:
+#           root: ['/root', '/other']
+#           auto: true
+#           copymax: 1
+#       cron: (optional)
+#         my_config:
+#           month: (optional, default: *)
+#           weekday: (optional, default: *)
+#           day: (optional, default: *)
+#           hour: (optional, default: *)
+#           minute: (optional, default: *)
+#
+# Reference:
+# * https://www.howtoforge.com/tutorial/unison-file-sync-between-two-servers-on-debian-10/
+
+- name: '{{ user }} | confirm user exists'
+  ansible.builtin.getent:
+    database: 'passwd'
+    key:      '{{ user }}'
+
+- name: '{{ user }} | set user preferences'
+  ansible.builtin.set_fact:
+    _unison_pref:  '{{ config.home }}/.unison'
+    _unison_group: '{{ config.group|default(user) }}'
+
+- name: '{{ user }} | set preferences directory'
+  ansible.builtin.file:
+    path:  '{{ _unison_pref }}'
+    owner: '{{ user }}'
+    group: '{{ _unison_group }}'
+    mode:  0700
+    state: 'directory'
+
+- name: '{{ user }} | set target directories' # noqa risky-file-permissions set only user/group (user defined directories)
+  ansible.builtin.file:
+    path:  '{{ item }}'
+    owner: '{{ user }}'
+    group: '{{ _unison_group }}'
+    state: 'directory'
+  loop: '{{ config.targets }}'
+
+- name: '{{ user }} | set configuration'
+  ansible.builtin.template:
+    src:   'config.prf.j2'
+    dest:  '{{ _unison_pref }}/{{ item.key }}.prf'
+    owner: '{{ user }}'
+    group: '{{ _unison_group }}'
+    mode:  0400
+  vars:
+    sync_config: '{{ item.value }}'
+  loop: '{{ config.config|dict2items }}'
+
+- name: '{{ user }} | set cron jobs'
+  ansible.builtin.include_tasks: cron.yml
+  loop: '{{ config.cron|default({})|dict2items }}'
+  loop_control:
+    loop_var: cron
+
+- name: '{{ user }} | run initial unison sync'
+  ansible.builtin.command: '/usr/bin/unison {{ item }}'
+  loop: '{{ config.initial_sync|default([]) }}'
+  become: true
+  become_user: '{{ user }}'
+  # Reference: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  vars:
+    ansible_ssh_pipelining: true
+  when: config.initial_sync|length > 0
+
+- name: '{{ user }} | run initial rsync'
+  ansible.builtin.include_tasks: rsync.yml
+  vars:
+    source:     '{{ item.source }}'
+    dest:       '{{ item.dest }}'
+    target:     '{{ item.target }}'
+    rsync_user: '{{ user }}'
+  loop: '{{ config.initial_rsync|default([]) }}'
+  when: config.initial_rsync|length > 0

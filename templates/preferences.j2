@@ -1,0 +1,4 @@
+Package: {{ unison_default_packages|join(' ') }}
+Pin: version {% if unison_version is defined %}{{ unison_version }}{% else %}2.51.*{% endif %}
+
+Pin-Priority: 999

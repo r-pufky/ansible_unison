@@ -1,0 +1,19 @@
+# Unison preferences configuration.
+#
+# Args:
+#   sync_config: Dictionary containing unison_config ssync config.
+# Reference:
+# * https://www.cis.upenn.edu/~bcpierce/unison/download/releases/stable/unison-manual.html#prefs
+#
+# Lists are repeated keys, booleans are lowercased.
+{% for key, value in sync_config.items() %}
+{% if value is sequence and value is not string %}
+{% for list_item in value %}
+{{ key }} = {{ list_item }}
+{% endfor %}
+{% elif value is string %}
+{{ key }} = {{ value }}
+{% else %}
+{{ key }} = {{ value|to_json }}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,8 @@
+---
+###############################################################################
+# Default Unison Package Dependencies
+###############################################################################
+# Default required packages for Unison install.
+
+unison_default_packages:
+  - 'unison'

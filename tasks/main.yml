@@ -1,0 +1,11 @@
+---
+- ansible.builtin.import_tasks: install.yml
+
+- ansible.builtin.include_tasks: unison_sync.yml
+  vars:
+    user:   '{{ _unison_user.key }}'
+    config: '{{ _unison_user.value }}'
+  loop: '{{ unison_config|default({})|dict2items }}'
+  loop_control:
+    loop_var: _unison_user
+  no_log: true

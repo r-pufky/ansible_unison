@@ -1,0 +1,25 @@
+---
+###############################################################################
+# Rsync Initial Sync
+###############################################################################
+# Set initial unison sync job per user using rsync.
+#
+# Args:
+#   source: string rsync source.
+#   dest: string rsync local dest.
+#   target: string local dest. If file/directory exists, rsync will not run.
+#   rsync_user: string user to run rsync as.
+
+- name: 'rsync | check if rsync target exists: {{ target }}'
+  ansible.builtin.stat:
+    path: '{{ target }}'
+  register: _unison_rsync_exists
+
+- name: 'rsync | run rsync {{ source }} -> {{ dest }}' # noqa command-instead-of-module execute rsync as user
+  ansible.builtin.command: '/usr/bin/rsync -a {{ source }} {{ dest }}'
+  become: true
+  become_user: '{{ rsync_user }}'
+  # Reference: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  vars:
+    ansible_ssh_pipelining: true
+  when: not _unison_rsync_exists.stat.exists

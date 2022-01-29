@@ -1,0 +1,38 @@
+---
+###############################################################################
+# Unison Cron Job Configuration
+###############################################################################
+# Set cron job based on configuration.
+#
+# Args:
+#   cron: cron section of unison_config.
+#
+#       my_config: (use special_time OR standard cron times)
+#         month: (optional, default: *)
+#         weekday: (optional, default: *)
+#         day: (optional, default: *)
+#         hour: (optional, default: *)
+#         minute: (optional, default: *)
+#         special_time: (optional)
+
+- name: 'cron | set standard scheduling sync'
+  ansible.builtin.cron:
+    name:    'unison {{ cron.key }} sync'
+    month:   '{{ cron.value.month|default("*") }}'
+    weekday: '{{ cron.value.weekday|default("*") }}'
+    day:     '{{ cron.value.day|default("*") }}'
+    hour:    '{{ cron.value.hour|default("*") }}'
+    minute:  '{{ cron.value.minute|default("*") }}'
+    user:    '{{ user }}'
+    job:     '/usr/bin/unison {{ cron.key }}'
+    state:   'present'
+  when: cron.value.special_time is not defined
+
+- name: 'cron | set special time sync'
+  ansible.builtin.cron:
+    name:         'unison {{ cron.key }} sync'
+    special_time: '{{ cron.value.special_time }}'
+    user:         '{{ user }}'
+    job:          '/usr/bin/unison {{ cron.key }}'
+    state:        'present'
+  when: cron.value.special_time is defined

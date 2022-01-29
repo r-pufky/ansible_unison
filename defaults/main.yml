@@ -1,0 +1,65 @@
+---
+###############################################################################
+# Unsion Role Configuration
+###############################################################################
+
+# Requires the same major versions on both systems. Pin to version.
+unison_version: '2.51.*'
+
+###############################################################################
+# Unsion Preferences Configuration
+###############################################################################
+# Users are not checked for existence by the role. This role should be applied
+# after any configuration for users/data to be sync'ed.
+#
+# Preferences are stored in a list of dictionaries, with the key used as the
+# config name in the unison profile. Each config key is mapping directly to the
+# unison preference option.
+#
+# Unison does not create local directories if missing. Targets will ensure
+# non-existing directories are created locally; this is separate from 'roots'.
+#
+# Unison will fail sync/setting permissions if a sync'ed file has UID/GID that
+# cannot be set by the unison user (e.g. a file owned by root).
+#
+# Only unison is installed if no configuration is provided.
+#
+# initial_rsync is provided as a way to copy symlinks from a known source for
+# an initial sync. It should NOT be used for any initial syncs not requiring
+# symlink copying.
+#
+# unison_config: (optional)
+#   user:
+#     home: '/home/user'
+#     targets: ['/other'] (list of local sync directories)
+#     group: 'user' (optional, default: user)
+#     initial_sync: (optional, list of configs to manually run on role).
+#       - 'my_config'
+#     initial_rsync: (optional, list dicts for rsync command; if target exists,
+#                     rsync is not run.)
+#       - {source: 'string', dest: 'string', target: '/other/exists'}
+#     config:
+#       my_config:
+#         root: ['/root', '/other']
+#         auto: true
+#         copymax: 1
+#     cron: (optional)
+#       my_config: (use special_time OR standard cron times)
+#         month: (optional, default: *)
+#         weekday: (optional, default: *)
+#         day: (optional, default: *)
+#         hour: (optional, default: *)
+#         minute: (optional, default: *)
+#         special_time: (optional)
+#
+# This will generate the following user config:
+# /home/user/.unison/my_config.prf
+#   root = /root
+#   root = /other
+#   auto = true
+#   copymax = 1
+#
+# Reference:
+# * https://www.cis.upenn.edu/~bcpierce/unison/download/releases/stable/unison-manual.html#prefs
+
+unison_config: {}

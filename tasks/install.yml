@@ -1,0 +1,22 @@
+---
+###############################################################################
+# Unsion Install
+###############################################################################
+#
+# Args:
+#   unison_version: string unison version to pin install to.
+#   unison_default_packages: list of packages for Unison install.
+
+- name: 'install | force unison version {{ unison_version }}'
+  ansible.builtin.template:
+    src:   'preferences.j2'
+    dest:  '/etc/apt/preferences.d/unison'
+    owner: 'root'
+    group: 'root'
+    mode:  0644
+
+- name: 'install | install'
+  ansible.builtin.apt:
+    name:  '{{ unison_default_packages }}'
+    state: 'latest'
+    update_cache: true
